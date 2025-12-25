@@ -94,7 +94,7 @@ Core business logic using Dry::Transaction for service orchestration:
 
 - `AddProject`: Validates input → calls API → reifies response to OpenStruct
 - `ListProjects`: Fetches watched projects from API
-- `AppraiseProject`: Validates project in watch list → retrieves appraisal → handles async processing
+- `AppraiseProject`: Ensures project exists (auto-adds if needed) → retrieves appraisal → handles async processing
 
 **Forms (`forms/`):**
 
@@ -188,15 +188,17 @@ Session cookie updated with project fullname
 Redirect to GET /project/{owner}/{name}
 ```
 
-**Viewing project contributions:**
+**Viewing project contributions (one-shot URL sharing):**
 
 ```text
 GET /project/{owner}/{name}
   ↓
 Service::AppraiseProject transaction:
-  - validate_project: Check project in session watch list
+  - ensure_project: Auto-add project via API if not in watch list
   - retrieve_folder_appraisal: Gateway::Api.appraise() → HTTP GET
   - reify_appraisal: If not processing, parse JSON to OpenStruct
+  ↓
+Controller updates session if project was auto-added
   ↓
 If API returns 202 (processing):
   - Views::AppraisalProcessing shows progress state
@@ -205,6 +207,8 @@ If API returns 200:
   ↓
 Render project.slim template
 ```
+
+**Note:** Users can share/bookmark project URLs directly. Visiting a URL for a project not in the user's watch list will automatically add it.
 
 ## Configuration
 
