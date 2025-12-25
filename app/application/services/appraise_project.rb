@@ -8,18 +8,38 @@ module CodePraise
     class AppraiseProject
       include Dry::Transaction
 
-      step :validate_project
+      step :ensure_project
       step :retrieve_folder_appraisal
       step :reify_appraisal
 
       private
 
-      def validate_project(input)
-        if input[:watched_list].include? input[:requested].project_fullname
-          Success(input)
+      def ensure_project(input)
+        project_fullname = input[:requested].project_fullname
+
+        # If already in watched list, skip API call
+        if input[:watched_list].include?(project_fullname)
+          Success(input.merge(project_added: false))
         else
-          Failure('Please first request this project to be added to your list')
+          # Auto-add project via API
+          add_project_to_api(input)
         end
+      end
+
+      def add_project_to_api(input)
+        result = Gateway::Api.new(CodePraise::App.config)
+          .add_project(input[:requested].owner_name, input[:requested].project_name)
+
+        if result.success?
+          Success(input.merge(project_added: true))
+        else
+          Representer::HttpResponse
+            .new(OpenStruct.new)
+            .from_json(result.payload)
+            .then { |error| Failure(error.message) }
+        end
+      rescue StandardError
+        Failure('Cannot access this project — please check the URL or try again later')
       end
 
       def retrieve_folder_appraisal(input)
