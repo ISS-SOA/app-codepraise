@@ -100,6 +100,12 @@ module CodePraise
 
             appraisal = OpenStruct.new(result.value!)
 
+            # Auto-add project to session if it was newly added via one-shot URL
+            if appraisal.project_added
+              session[:watching].insert(0, path_request.project_fullname).uniq!
+              flash.now[:notice] = MSG_PROJECT_ADDED
+            end
+
             if appraisal.response.processing?
               flash.now[:notice] = appraisal.response.message['msg']
             else

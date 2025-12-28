@@ -13,7 +13,6 @@ AllCops:
 plugins:
   - rubocop-minitest
   - rubocop-rake
-  - rubocop-sequel
 
 # Ignore block length where unavoidable (e.g., frameworks using blocks)
 Metrics/BlockLength:

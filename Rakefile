@@ -7,6 +7,13 @@ task :default do
   puts `rake -T`
 end
 
+namespace :spec do
+  Rake::TestTask.new(:default) do |t|
+    t.pattern = 'spec/tests/{unit,integration}/**/*_spec.rb'
+    t.warning = false
+  end
+end
+
 desc 'Run the unit and integration tests'
 task spec: ['spec:default']
 
