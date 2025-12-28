@@ -82,3 +82,10 @@ namespace :quality do
     sh "flog -m #{only_app}"
   end
 end
+
+namespace :ai do
+  desc 'Show and store history of AI conversations regarding the project'
+  task :history do
+    sh 'uvx claude-code-log@latest --open-browser'
+  end
+end
